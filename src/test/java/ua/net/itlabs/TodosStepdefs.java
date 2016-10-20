@@ -1,13 +1,12 @@
 package ua.net.itlabs;
 
-import com.codeborne.selenide.CollectionCondition;
-import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import cucumber.api.DataTable;
 import cucumber.api.PendingException;
 import cucumber.api.java.en.*;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,25 +31,40 @@ public class TodosStepdefs {
         open("https://todomvc4tasj.herokuapp.com/");
     }
 
-    @When("^add tasks (.*)$")
+    @When("^add tasks: (.*)$")
     public void addTasks(List<String> taskTexts) {
         for (String text: taskTexts) {
             $("#new-todo").setValue(text).pressEnter();
         }
     }
 
-    @Then("^tasks are: (.*)$")
-    public void tasksAre(List<String> taskTexts) {
-        tasks.shouldHave(exactTexts(taskTexts));
+    @When("^edit task '(.*)' to have text '(.*)' and press Enter$")
+    public void editTaskAndPressEnter(String oldText, String newText) {
+        startEdit(oldText, newText).sendKeys(ENTER);
     }
 
-    @And("^delete task (.*)$")
+    @When("^edit task '(.*)' to have text '(.*)' and press Tab$")
+    public void editTaskAndPressTab(String oldText, String newText) {
+        startEdit(oldText, newText).sendKeys(TAB);
+    }
+
+    @When("^edit task '(.*)' to have text '(.*)' and press Escape$")
+    public void editTaskAndPressEscape(String oldText, String newText) {
+        startEdit(oldText, newText).sendKeys(ESCAPE);
+    }
+
+    public SelenideElement startEdit(String oldText, String newText) {
+        doubleClick(tasks.find(exactText(oldText)).find("label"));
+        return tasks.find(cssClass("editing")).find(".edit").setValue(newText);
+    }
+
+    @And("^delete task '(.*)'$")
     public void deleteTask(String taskText) {
         tasks.find(exactText(taskText)).hover();
         tasks.find(exactText(taskText)).find(".destroy").click();
     }
 
-    @And("^toggle task (.*)")
+    @And("^toggle task '(.*)'")
     public void toggleTask(String taskText) {
         tasks.find(exactText(taskText)).find(".toggle").click();
     }
@@ -67,42 +81,38 @@ public class TodosStepdefs {
         $("#toggle-all").click();
     }
 
-//    @But("^(.) item(s) left$")
-//    public void itemsLeft(int count) {
-//        $("#todo-count>strong").shouldHave(exactText(Integer.toString(count)));
+//    @When("^add completed tasks$")
+//    public void addCompletedTasks(List<String> taskTexts) {
+//        addTasks(taskTexts);
+//        toggleAllTasks();
 //    }
-
-    @When("^add completed tasks$")
-    public void addCompletedTasks(List<String> taskTexts) {
-        addTasks(taskTexts);
-        toggleAllTasks();
-    }
-
-
 
     @And("^clear completed tasks$")
     public void clearCompletedTasks() {
         $("#clear-completed").click();
     }
 
-    @Then("^notasks$")
+    @Then("^no tasks left$")
     public void noTasks() {
         tasks.filter(visible).shouldBe(empty);
     }
 
-    @When("^edit task '(.*)' to '(.*)' and press Escape$")
-    public void editTaskAndPressEscape(String oldTask, String newTask) {
-        doubleClick(tasks.find(exactText(oldTask)).find("label"));
-        tasks.find(cssClass("editing")).find(".edit").setValue(newTask).sendKeys(ESCAPE);
+    @Then("^tasks are: (.*)$")
+    public void tasksAre(List<String> taskTexts) {
+        tasks.shouldHave(exactTexts(taskTexts));
     }
 
-    @But("^(\\d+) item\\(s\\) left$")
+    @And("^(\\d+) item\\(s\\) left$")
     public void itemsLeft(int count) {
         $("#todo-count>strong").shouldHave(exactText(Integer.toString(count)));
     }
 
+    @And("^clear completed button is not shown$")
+    public void clearCompletedButtonIsNotShown() {
+        $("#clear-completed").shouldNotBe(visible);
+    }
 
-    @Given("^added (.*) tasks (.*)$")
+    @Given("^added (.*) tasks: (.*)$")
     public void givenTasks(TaskType taskType, List<String> taskTexts) {
         givenAtAll(aTasks(taskType, taskTexts.toArray(new String[0])));
     }
@@ -134,17 +144,20 @@ public class TodosStepdefs {
         return new Task(name, type);
     }
 
-    @When("^edit task '(.*)' to '(.*)' and press Enter$")
-    public void editTaskAndPressEnter(String oldTask, String newTask) {
-        doubleClick(tasks.find(exactText(oldTask)).find("label"));
-        tasks.find(cssClass("editing")).find(".edit").setValue(newTask).sendKeys(ENTER);
+    @Given("^tasks:$")
+    public void givenTasks(DataTable data) {
+        Map<String, TaskType> givenTasks = data.asMap(String.class, TaskType.class);
+        ArrayList<String> names = new ArrayList<String>(givenTasks.keySet());
+        ArrayList<TaskType> statuses = new ArrayList<TaskType>(givenTasks.values());
+
+        Task tasksArray[] = new Task[names.size()];
+        for (int i=0; i<names.size(); i++) {
+            tasksArray[i] = aTask(names.get(i), statuses.get(i));
+        }
+        givenAtAll(tasksArray);
+
     }
 
-    @When("^edit task '(.*)' to '(.*)' and press Tab$")
-    public void editTaskAndPressTab(String oldTask, String newTask) {
-        doubleClick(tasks.find(exactText(oldTask)).find("label"));
-        tasks.find(cssClass("editing")).find(".edit").setValue(newTask).sendKeys(TAB);
-    }
 
     public class Task {
         String name;
