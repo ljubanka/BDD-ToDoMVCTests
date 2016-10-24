@@ -3,7 +3,6 @@ package ua.net.itlabs;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import cucumber.api.DataTable;
-import cucumber.api.PendingException;
 import cucumber.api.java.en.*;
 
 import java.util.ArrayList;
@@ -81,12 +80,6 @@ public class TodosStepdefs {
         $("#toggle-all").click();
     }
 
-//    @When("^add completed tasks$")
-//    public void addCompletedTasks(List<String> taskTexts) {
-//        addTasks(taskTexts);
-//        toggleAllTasks();
-//    }
-
     @And("^clear completed tasks$")
     public void clearCompletedTasks() {
         $("#clear-completed").click();
@@ -133,7 +126,7 @@ public class TodosStepdefs {
     }
 
     public Task[] aTasks(TaskType taskType, String... taskTexts) {
-        Task tasksArray[] = new Task[taskTexts.length];
+        Task[] tasksArray = new Task[taskTexts.length];
         for (int i=0; i<taskTexts.length; i++) {
             tasksArray[i] = aTask(taskTexts[i], taskType);
         }
@@ -155,9 +148,7 @@ public class TodosStepdefs {
             tasksArray[i] = aTask(names.get(i), statuses.get(i));
         }
         givenAtAll(tasksArray);
-
     }
-
 
     public class Task {
         String name;

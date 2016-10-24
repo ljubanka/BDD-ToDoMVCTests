@@ -11,9 +11,7 @@ public class TodosStepHooks {
 
     @Before("@clean")
     public void setup() {
-        if (!(Configuration.timeout >= 10000)) {
-            Configuration.timeout = 10000;
-        }
+        Configuration.timeout = 10000;
     }
 
     @After("@clean")
@@ -21,6 +19,5 @@ public class TodosStepHooks {
         executeJavaScript("localStorage.clear()");
         open("https://todomvc4tasj.herokuapp.com/");
     }
-
 
 }
